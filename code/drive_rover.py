@@ -51,9 +51,12 @@ class RoverState():
         self.brake = 0 # Current brake value
         self.nav_angles = None # Angles of navigable terrain pixels
         self.nav_dists = None # Distances of navigable terrain pixels
+        self.gold_angles = None # Angles of rocks
+        self.gold_dists = None # Distance of rocks
         self.ground_truth = ground_truth_3d # Ground truth worldmap
         self.mode = 'forward' # Current mode (can be forward or stop)
-        self.throttle_set = 0.2 # Throttle setting when accelerating
+        self.previous_mode = None # Hold the previous mode in case of getting stuck
+        self.throttle_set = 0.3 # Throttle setting when accelerating
         self.brake_set = 10 # Brake setting when braking
         # The stop_forward and go_forward fields below represent total count
         # of navigable terrain pixels.  This is a very crude form of knowing
@@ -61,7 +64,7 @@ class RoverState():
         # get creative in adding new fields or modifying these!
         self.stop_forward = 50 # Threshold to initiate stopping
         self.go_forward = 500 # Threshold to go forward again
-        self.max_vel = 2 # Maximum velocity (meters/second)
+        self.max_vel = 2.5 # Maximum velocity (meters/second)
         # Image output from perception step
         # Update this image to display your intermediate analysis steps
         # on screen in autonomous mode
@@ -77,6 +80,26 @@ class RoverState():
         self.near_sample = 0 # Will be set to telemetry value data["near_sample"]
         self.picking_up = 0 # Will be set to telemetry value data["picking_up"]
         self.send_pickup = False # Set to True to trigger rock pickup
+        self.hug_wall = False # Set to true to start hugging the wall
+        self.offset_multiplier = 0 # The multiplier for the offset on the hugging wall function
+        self.max_offset_multiplier = 0.8 # the limit for which we can multiply the offset
+        self.left_home = False # Set to true to indicate that the rover left the home position
+        self.going_home = False # Going back home
+        self.home = None # Position of the Home (x, y) in order to come back to
+        self.last_pos = None # Last checked position in order to verify that the rover is moving (eg. not stuck)
+        self.last_pos_tm = 0 # Time when the position was checked last
+        self.stop_tm = None # The time when the stop mode started
+        self.unstuck_method = 0 # Method to use to try and unstuk
+        self.tm_stuck = None # How long have we been in stuck mode
+        self.tm_stuck_sec = 0 # How long have we been in stuck mode
+        self.tm_unspin = None # The time when we started spinning
+        self.tm_unspin_sec = 0 # the amount of seconds that we have been spinning
+        self.tm_spin = None # The time at which we started spinning
+        self.tm_spin_sec = 0 # How long have we been spinning
+        self.pre_gold_pos = None # Position before attempting the gold pick up
+        self.pre_gold_angles = [] # The recorded angles after we attempt to pick up the samples
+        self.pre_gold_cnt = None # The amount of samples collected before attempting to collect a new one
+        self.tm_gold = None # The time when it started picking up the gold sample
 # Initialize our rover 
 Rover = RoverState()
 
@@ -99,7 +122,7 @@ def telemetry(sid, data):
         fps = frame_counter
         frame_counter = 0
         second_counter = time.time()
-    print("Current FPS: {}".format(fps))
+    # print("Current FPS: {}".format(fps))
 
     if data:
         global Rover
