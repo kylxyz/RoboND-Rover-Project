@@ -133,7 +133,7 @@ After confirming that the rover is not hard spinning I will reset the spin check
 The next is to verify if the rover is near a sample and change the state to 'gold' mode in order to peform the picking actions.
 If the rover has `gold_angles` and is closer than 50 mts from the sample it will start the preparations to aproach the samples and once we are closer than 40 mts it will change the mode to 'gold' to try the picking process.
 
-**navigtion**
+**navigation**
 
 If the rover is not 'stuck' or spinning or ready to collect sampless then it can just keep on navigating, for that the default options are more less the same with the small difference that I will check for the `going_home` flag in order to use or ignore the offset to add for the angles.
 
