@@ -43,6 +43,7 @@ The same function is reflected in the `perception.py` file and used by the `perc
 ![alt text][image1]
 
 #### 2. Color Thresholding
+
 Using the mask returned by the previous function I can separate 2 different maps, one with the navigatable area (left) and another one with the obstacles (right)
 
 In the `perception.py` file I use this 2 maps to populate the `Rover.vision_image`, I use the blue channel for the empty space `Rover.vision_image[:,:,2]=threshed * 255` and the Red channel for the obstacles `Rover.vision_image[:,:,0] = obs_map * 255`
@@ -90,6 +91,7 @@ I then check for the gold samples on the images and if present applied the same 
 Finally just built the image to display on the video presenting the threshed image as the rover navigates.
 
 ### Autonomous Navigation and Mapping
+
 The Rover simulation is launched using  a resolution of '1024 x 768' and Graphics quality of 'good'.
 
 #### 1. Perception, drive_rover, decision
@@ -110,6 +112,7 @@ In order to achieve this I added a possitive offset to the mean angle and follow
 
 ---
 **Improvement point**
+
 This approach only works on this particular environment because the rover is in a contained space where it can't go out of and it will eventually make a loop going in circles, however in a real situation this would be a very bad idea, specifically without knowing beforehand the layout where the rover currently is.
 A better aproach given the time would be to implement a path finder algorithm (eg: A*) and divide the area into grids to provide a restriction to the area that can potentially be mapped, the rover can then start to explore the grids one by one chasing after the unknown cells on each grid using the pathfinder function. This will also be applied to the samples once recogniced making sure that the approach path is as straight as possible to avoid getting stuck close to walls or obstacles.
 
@@ -126,10 +129,12 @@ In order to avoid spinning in circles on open spaces because of the offset I add
 After confirming that the rover is not hard spinning I will reset the spin check timer to perform the chek later on.
 
 **sample collection**
+
 The next is to verify if the rover is near a sample and change the state to 'gold' mode in order to peform the picking actions.
 If the rover has `gold_angles` and is closer than 50 mts from the sample it will start the preparations to aproach the samples and once we are closer than 40 mts it will change the mode to 'gold' to try the picking process.
 
 **navigtion**
+
 If the rover is not 'stuck' or spinning or ready to collect sampless then it can just keep on navigating, for that the default options are more less the same with the small difference that I will check for the `going_home` flag in order to use or ignore the offset to add for the angles.
 
 ```
@@ -143,45 +148,56 @@ Personal note: perhaps some fireworks are needed for this mode.
 ```
 
 ##### stuck mode
+
 If the rover enters this mode it will try a series of methods to try and get itself unstuck, the methods will go in order of severity and it will reset at the end if nothing worked in thehope that further attemps will be more successful. I found that due to some glitches in the simulator environment it tends to get stuck when is veraly close to some of the rocks (perhaps is quick sand rather than a glitch) so one of the un-stuck methods will surelly work, so far I have not encountered any situation (finger crossed) that will keep the rover stuck forever.
 Bellow is the explanation for each hof the methods in the same order tried by the rover.
 
 **0: reverse**
+
 The first method will have the rover simply reverse on a straight line, this method is specially usefull when it hit some small rocks that the camera can't see but is not really stuck too much.
 the rover will reverse for a total of 150 seconds to try and get enough clearance to continue.
 
 ---
 **Improvement point**
+
 This method could be more robust if it actually monitors if the rover is reversing and if the obstacle is ahead meaning that it can stop rather than just blindly keep on reversing for the given ammount of time.
 
 ---
 
 **1: small steering**
+
 The rover will try to spin in place for a small amount of time, if it can see empty space to either left or right it will spin in that direction, if not it will default to spinning to the right. This spin will continue untill the rover can see empty terrain or 100 seconds passed trying.
 
 **2: right spinning**
+
 The rover will spin to the right for 20 seconds.
 
 **3: full speed backwards**
+
 The rover will attempt to just go full throttle bacwards for 80 seconds.
 
 ---
 **Improvement point**
+
 This method could also  use the same inmprovement as the reverse method to just move untill clear terrain is on sight.
 
 ---
 
 **4: full speed ahead**
+
 Same as before but forward in cases where some strange angled stone got one of the back wheels of the rover.
 
 **reset**
+
 If everything failed it will just reset the state of the stuck function and put the rover into 'stop' mode in the hopes that another go will do the trick.
 
 ##### gold mode
+
 The rover will monitor the time spend on thhis state to avoid staying trying to pick gold forever, if it has been in this state for over 80 seconds it will flag itself as stuck and hopefully it will be able to pick the sample next try.
 
 ---
 **Improvement point**
+
 As mentioned before it would be better to implement a pathfinder algorithm and approach the sampleas in a straight line by positioning the rover neext to the sample and spinning towards it instead of the current method that just adjuste the steering angle to get to it.
 
 ---
@@ -194,6 +210,7 @@ After picking up the sample the rover will try to reverse towards the point wher
 After finishing theprocess the rover will verify if indeed it picked up the sample by comparing the pre pick up count with the current one, if the picking was succesfull it will continue mapping, however if is not it will reverse in hopes of re targetting the sample again for another try.
 
 ##### home mode
+
 Once the rover is home it will just stop and await for further instructions.
 
 #### 2. Launching in autonomous mode.
